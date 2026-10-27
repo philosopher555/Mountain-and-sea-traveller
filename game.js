@@ -57,6 +57,24 @@ const directions = [
   { id: 'down', icon: '↓', name: '下', frequency: 330 },
   { id: 'left', icon: '←', name: '左', frequency: 440 },
 ];
+const npcs = [
+  { id: 'ayan', scene: 0, x: 260, name: '阿沅', role: '摆渡人', kind: 'human', skin: 'coral', lines: ['先别急着过河，听听芦苇怎么说。', '今天的雾很轻，船桨都记得回家的路。'], request: { coins: 2, reward: 5, text: '替我找回两枚落在岸边的潮光吧。' } },
+  { id: 'hebo', scene: 0, x: 900, name: '鹤伯', role: '白鹭先生', kind: 'bird', skin: 'mist', lines: ['我在这儿站了很久，等一阵往南的风。', '渡口的倒影里，偶尔会多出一艘船。'] },
+  { id: 'lumi', scene: 0, x: 1480, name: '露米', role: '芦苇精', kind: 'spirit', skin: 'moss', lines: ['嘘，水底下有人在唱很旧的歌。', '我把露珠藏在叶子后面，你看见了吗？'], request: { coins: 3, reward: 6, text: '收集三枚潮光，给迷路的露珠照照路。' } },
+  { id: 'mugu', scene: 0, x: 2070, name: '木姑', role: '修船匠', kind: 'human', skin: 'sun', lines: ['这条船不怕风浪，只怕没人再坐它。', '船板上有个旧名字，被水泡得看不清了。'] },
+  { id: 'shigu', scene: 1, x: 280, name: '石咕', role: '山灵', kind: 'spirit', skin: 'moss', lines: ['我不是石头，我只是在这里睡得久。', '藤蔓绕了我三圈，说这是它的家。'], request: { coins: 2, reward: 5, text: '帮我找两枚潮光，我想换个地方晒太阳。' } },
+  { id: 'tenggu', scene: 1, x: 760, name: '藤姑', role: '采药人', kind: 'human', skin: 'moss', lines: ['紫色小花不要摘，夜里它们会发光。', '你听，石缝里的水声像不像有人笑？'] },
+  { id: 'xiaohu', scene: 1, x: 1540, name: '小狐', role: '山径向导', kind: 'fox', skin: 'coral', lines: ['跟紧我！啊，前面那条路我也没走过。', '我没有偷吃果子，是果子自己滚进嘴里的。'] },
+  { id: 'axian', scene: 1, x: 2070, name: '阿弦', role: '石匠学徒', kind: 'human', skin: 'ink', lines: ['山谷会记住每一声敲击。', '师父说，石头里面藏着一颗很慢的心。'], request: { coins: 3, reward: 6, text: '找三枚潮光来，我想给师父做一盏灯。' } },
+  { id: 'yunbao', scene: 2, x: 260, name: '云宝', role: '云团精', kind: 'spirit', skin: 'mist', lines: ['我刚刚变成了一朵鱼形的云！你看见了吗？', '别踩那块石头，它在打盹。'], request: { coins: 2, reward: 5, text: '帮云宝拾两枚潮光，给云朵镶上星星。' } },
+  { id: 'baiyu', scene: 2, x: 720, name: '白羽', role: '云上信使', kind: 'bird', skin: 'sun', lines: ['这封信没有地址，风说它知道要去哪里。', '云下面的海，今天是银色的。'] },
+  { id: 'shouzhi', scene: 2, x: 1530, name: '守枝人', role: '古树看护者', kind: 'human', skin: 'moss', lines: ['树根向下寻找旧梦，枝叶向上寻找新梦。', '有些路看起来没通，只是还没等到风来。'], request: { coins: 3, reward: 7, text: '收集三枚潮光，替古树点亮枝头。' } },
+  { id: 'tuantuan', scene: 2, x: 2050, name: '团团', role: '石狮子', kind: 'fox', skin: 'coral', lines: ['我不是狮子，我只是长得比较威风。', '坐在这里看云，是一件很忙的事。'] },
+  { id: 'dengniang', scene: 3, x: 280, name: '灯娘', role: '守灯人', kind: 'human', skin: 'plum', lines: ['灯火不怕黑，只怕忘记为什么亮着。', '潮水每来一次，都会带走一个秘密。'], request: { coins: 2, reward: 6, text: '替祭坛找两枚潮光，让石灯再亮一会儿。' } },
+  { id: 'yeyou', scene: 3, x: 780, name: '夜游', role: '巡夜狐', kind: 'fox', skin: 'sun', lines: ['晚上好，白天也好，我不挑时辰。', '我刚刚听见石灯叫了你的名字。'] },
+  { id: 'chaosheng', scene: 3, x: 1700, name: '潮生', role: '潮汐灵', kind: 'spirit', skin: 'ink', lines: ['退潮不是离开，是在远处换一口气。', '再往前走，雾后面还有很长很长的路。'], request: { coins: 3, reward: 8, text: '收集三枚潮光，帮我把它们送回海里。' } },
+  { id: 'shiyi', scene: 3, x: 2100, name: '拾一', role: '远行客', kind: 'human', skin: 'coral', lines: ['我从很远的地方来，也还没想好去哪儿。', '如果你要继续走，记得把今天也带上。'] },
+];
 const keyState = new Set();
 const input = { x: 0, y: 0 };
 const player = { x: 110, lane: 0, jump: 0, jumpSpeed: 0, facing: 1, scene: 0, skin: 'mist', name: '拾雾的人' };
@@ -65,6 +83,8 @@ const state = {
   owned: ['mist', 'coral', 'moss'],
   collected: [],
   solved: [],
+  npcQuests: [],
+  npcAccepted: [],
   remotes: [],
   room: '',
   id: crypto.randomUUID(),
@@ -96,6 +116,8 @@ function readSave() {
     state.owned = Array.isArray(saved.owned) ? [...new Set(['mist', 'coral', 'moss', ...saved.owned.filter((id) => skins.some((skin) => skin.id === id))])] : ['mist', 'coral', 'moss'];
     state.collected = Array.isArray(saved.collected) ? saved.collected : [];
     state.solved = Array.isArray(saved.solved) ? saved.solved : [];
+    state.npcQuests = Array.isArray(saved.npcQuests) ? saved.npcQuests : [];
+    state.npcAccepted = Array.isArray(saved.npcAccepted) ? saved.npcAccepted : [];
     player.skin = state.owned.includes(saved.skin) ? saved.skin : 'mist';
   } catch {
     state.owned = ['mist', 'coral', 'moss'];
@@ -104,7 +126,7 @@ function readSave() {
 }
 
 function saveGame() {
-  localStorage.setItem('mist-island-save', JSON.stringify({ coins: state.coins, owned: state.owned, collected: state.collected, solved: state.solved, skin: player.skin }));
+  localStorage.setItem('mist-island-save', JSON.stringify({ coins: state.coins, owned: state.owned, collected: state.collected, solved: state.solved, npcQuests: state.npcQuests, npcAccepted: state.npcAccepted, skin: player.skin }));
 }
 
 function updateCoinCount() {
@@ -450,6 +472,162 @@ function drawPlayer(x, lane, skin, name, facing, jump, time, isRemote = false) {
   ctx.restore();
 }
 
+function drawNpc(npc, time) {
+  const outfit = skins.find((skin) => skin.id === npc.skin) || skins[0];
+  const x = npc.x + Math.sin(time * .0018 + npc.x) * 7 - camera;
+  const floor = height * .77;
+  const bob = Math.sin(time * .003 + npc.x) * 3;
+  const y = floor - bob;
+
+  if (npc.kind === 'human') {
+    drawPlayer(npc.x + Math.sin(time * .0018 + npc.x) * 7, 0, npc.skin, npc.name, 1, 0, time);
+  } else {
+    ctx.save();
+    ctx.translate(x, y);
+    if (npc.kind === 'spirit') {
+      ctx.globalAlpha = .23;
+      ctx.fillStyle = outfit.trim;
+      ctx.beginPath();
+      ctx.arc(0, -31, 31, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = outfit.coat;
+      ctx.beginPath();
+      ctx.moveTo(-14, -25);
+      ctx.quadraticCurveTo(-17, -48, 0, -51);
+      ctx.quadraticCurveTo(17, -48, 14, -25);
+      ctx.lineTo(9, -12);
+      ctx.lineTo(3, -18);
+      ctx.lineTo(-3, -11);
+      ctx.lineTo(-9, -18);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = outfit.face;
+      ctx.beginPath();
+      ctx.arc(0, -37, 10, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = outfit.hair;
+      ctx.fillRect(-8, -45, 16, 4);
+      ctx.fillStyle = '#273a34';
+      ctx.fillRect(-4, -38, 2, 2);
+      ctx.fillRect(3, -38, 2, 2);
+      ctx.fillStyle = outfit.trim;
+      ctx.fillRect(-19, -31 + Math.sin(time * .004 + npc.x) * 3, 5, 5);
+      ctx.fillRect(15, -44 + Math.cos(time * .004 + npc.x) * 3, 4, 4);
+    } else if (npc.kind === 'bird') {
+      ctx.fillStyle = '#e9e4ca';
+      ctx.beginPath();
+      ctx.ellipse(-1, -24, 13, 18, -.35, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = outfit.coat;
+      ctx.beginPath();
+      ctx.ellipse(-4, -25, 9, 11, -.45, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#e9e4ca';
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(5, -34);
+      ctx.quadraticCurveTo(13, -55, 7, -57);
+      ctx.stroke();
+      ctx.fillStyle = '#e9e4ca';
+      ctx.beginPath();
+      ctx.arc(7, -57, 7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = outfit.trim;
+      ctx.beginPath();
+      ctx.moveTo(12, -57);
+      ctx.lineTo(22, -54);
+      ctx.lineTo(12, -52);
+      ctx.fill();
+      ctx.fillStyle = '#283b34';
+      ctx.fillRect(8, -59, 2, 2);
+      ctx.strokeStyle = '#c49b62';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-5, -11);
+      ctx.lineTo(-7, -3);
+      ctx.moveTo(2, -11);
+      ctx.lineTo(3, -3);
+      ctx.stroke();
+    } else {
+      ctx.fillStyle = outfit.trim;
+      ctx.beginPath();
+      ctx.ellipse(-17, -20, 10, 7, -.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = outfit.coat;
+      ctx.beginPath();
+      ctx.ellipse(-1, -21, 17, 11, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(4, -28);
+      ctx.lineTo(7, -45);
+      ctx.lineTo(15, -32);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(12, -28, 12, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(4, -36);
+      ctx.lineTo(5, -49);
+      ctx.lineTo(13, -39);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(15, -39);
+      ctx.lineTo(22, -48);
+      ctx.lineTo(23, -35);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = outfit.face;
+      ctx.fillRect(18, -30, 2, 2);
+    }
+    ctx.restore();
+    ctx.textAlign = 'center';
+    ctx.font = '10px serif';
+    ctx.fillStyle = 'rgba(248,241,218,.95)';
+    ctx.fillText(npc.name, x, y - 68);
+  }
+
+  ctx.textAlign = 'center';
+  ctx.font = '8px serif';
+  ctx.fillStyle = 'rgba(242,218,165,.82)';
+  ctx.fillText(npc.role, x, y - 82);
+}
+
+function drawNpcs(time) {
+  npcs.filter((npc) => npc.scene === player.scene).forEach((npc) => drawNpc(npc, time));
+}
+
+function getNearbyNpc() {
+  return npcs
+    .filter((npc) => npc.scene === player.scene && Math.abs(player.x - npc.x) < 82)
+    .sort((left, right) => Math.abs(player.x - left.x) - Math.abs(player.x - right.x))[0];
+}
+
+function talkToNpc(npc) {
+  if (npc.request && !state.npcQuests.includes(npc.id)) {
+    if (!state.npcAccepted.includes(npc.id)) {
+      state.npcAccepted.push(npc.id);
+      saveGame();
+    }
+    const sceneId = scenes[npc.scene].id;
+    const found = state.collected.filter((key) => key.startsWith(`${sceneId}:`)).length;
+    if (found >= npc.request.coins) {
+      state.npcQuests.push(npc.id);
+      state.coins += npc.request.reward;
+      saveGame();
+      updateCoinCount();
+      showToast(`${npc.name}：多谢你！收下 ${npc.request.reward} 枚潮光。`);
+      return;
+    }
+    showToast(`${npc.name}：${npc.request.text}（${found}/${npc.request.coins}）`);
+    return;
+  }
+  const line = npc.lines[Math.floor(Math.random() * npc.lines.length)];
+  showToast(`${npc.name} · ${npc.role}：${line}`);
+}
+
 function draw(time) {
   const scene = scenes[player.scene];
   camera = Math.max(0, Math.min(WORLD_WIDTH - width, player.x - width * .45));
@@ -461,6 +639,7 @@ function draw(time) {
     const key = `${scene.id}:${index}`;
     if (!state.collected.includes(key)) drawCoin(x, floor - 41 - (index % 2) * 12, time, index);
   });
+  drawNpcs(time);
 
   for (const remote of state.remotes) {
     if (remote.scene !== scene.id || !Number.isFinite(remote.x)) continue;
@@ -476,16 +655,24 @@ function updateHud(scene) {
   const total = coinPoints.flat().length;
   const gathered = state.collected.length;
   const solved = state.solved.length;
-  questNote.querySelector('p').textContent = solved === scenes.length
-    ? `回声已解开；再找找潮光（${gathered}/${total}）。`
-    : `解开此地回声（${solved}/${scenes.length}），潮光 ${gathered}/${total}。`;
+  const activeRequest = npcs.find((npc) => npc.scene === player.scene && npc.request && state.npcAccepted.includes(npc.id) && !state.npcQuests.includes(npc.id));
+  if (activeRequest) {
+    const sceneId = scenes[player.scene].id;
+    const localCoins = state.collected.filter((key) => key.startsWith(`${sceneId}:`)).length;
+    questNote.querySelector('p').textContent = `支线：${activeRequest.name}的潮光（${localCoins}/${activeRequest.request.coins}），收好后还给 TA。`;
+  } else {
+    questNote.querySelector('p').textContent = solved === scenes.length
+      ? `回声已解开；再找找潮光（${gathered}/${total}）。`
+      : `解开此地回声（${solved}/${scenes.length}），潮光 ${gathered}/${total}。`;
+  }
 
+  const nearbyNpc = getNearbyNpc();
   const closeStory = Math.abs(player.x - stories[player.scene].x) < 70;
   const nearGate = player.x > WORLD_WIDTH - 180;
   const nearReturn = player.x < 70 && player.scene > 0;
-  nearbyPrompt.hidden = !closeStory && !nearGate && !nearReturn;
+  nearbyPrompt.hidden = !nearbyNpc && !closeStory && !nearGate && !nearReturn;
   const promptText = nearbyPrompt.querySelector('span');
-  promptText.textContent = closeStory ? (state.solved.includes(scene.id) ? `聆听「${scene.landmark}」` : '寻找此处的回声') : nearReturn ? '回到上一处风景' : player.scene === scenes.length - 1 ? '前路仍在更新' : '试着打开雾门';
+  promptText.textContent = nearbyNpc ? `和 ${nearbyNpc.name} 聊聊` : closeStory ? (state.solved.includes(scene.id) ? `聆听「${scene.landmark}」` : '寻找此处的回声') : nearReturn ? '回到上一处风景' : player.scene === scenes.length - 1 ? '前路仍在更新' : '试着打开雾门';
   nearbyPrompt.querySelector('kbd').textContent = 'E';
 }
 
@@ -511,6 +698,11 @@ function collectCoins() {
 
 function interact() {
   if (!state.started) return;
+  const nearbyNpc = getNearbyNpc();
+  if (nearbyNpc) {
+    talkToNpc(nearbyNpc);
+    return;
+  }
   const story = stories[player.scene];
   if (Math.abs(player.x - story.x) < 100) {
     if (state.solved.includes(scenes[player.scene].id)) {
@@ -744,7 +936,7 @@ function startJourney() {
     syncPlayers();
     networkTimer = setInterval(syncPlayers, 900);
   }
-  showToast('渡船已经靠岸，向右走去看看吧。');
+  showToast('摆渡人阿沅就在附近，靠近岛上的居民按 E 聊聊。');
 }
 
 function openModal(id) {
