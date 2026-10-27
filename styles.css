@@ -51,6 +51,14 @@ button { color: inherit; }
 .scene-caption strong { margin-top: 5px; font-size: clamp(20px, 2.2vw, 29px); font-weight: 500; letter-spacing: 3px; }
 .scene-index { margin-bottom: 4px; color: rgba(238,231,209,.73); font: 10px var(--mono); }
 .quest-note { position: absolute; z-index: 2; top: 43%; right: 7.5%; display: flex; gap: 10px; align-items: center; width: 220px; padding: 11px 13px; border-left: 1px solid rgba(240,199,123,.8); background: linear-gradient(90deg, rgba(24,49,44,.53), transparent); }
+.item-bar { position: absolute; z-index: 4; top: 83px; left: 38px; display: flex; gap: 5px; pointer-events: auto; }
+.item-tool { position: relative; width: 54px; height: 57px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border: 1px solid rgba(229,223,193,.2); color: #e8e2c9; background: rgba(18,39,37,.62); cursor: pointer; transition: background .16s, border-color .16s, opacity .16s; }
+.item-tool:hover:not(:disabled), .item-tool.active { border-color: rgba(240,199,123,.78); background: rgba(49,62,47,.88); }
+.item-tool:disabled { opacity: .48; cursor: default; }
+.tool-glyph { color: var(--gold); font: 18px var(--serif); line-height: 1; }
+.tool-name { color: rgba(241,237,215,.82); font-size: 8px; }
+.item-tool b { position: absolute; top: -5px; right: -4px; min-width: 16px; height: 16px; padding: 1px 3px; border: 1px solid rgba(240,199,123,.4); color: var(--gold); background: #19332f; font: 9px/13px var(--mono); }
+.item-tool kbd { position: absolute; right: 3px; bottom: 3px; padding: 1px 3px; font-size: 7px; opacity: .6; }
 .note-seal { width: 26px; height: 26px; display: grid; place-items: center; border: 1px solid rgba(224,139,104,.75); border-radius: 50%; color: #eaa787; font-size: 12px; }
 .quest-note small { color: var(--gold); font-size: 10px; }
 .quest-note p { margin: 4px 0 0; color: rgba(245,239,218,.88); font-size: 11px; line-height: 1.65; }
@@ -176,6 +184,10 @@ kbd { border: 1px solid rgba(237,232,207,.38); color: rgba(241,237,215,.9); font
   .scene-caption { top: 24%; left: 7%; }
   .scene-caption strong { font-size: 21px; }
   .quest-note { top: 38%; right: 5%; width: min(190px, 47vw); padding: 8px; }
+  .item-bar { top: 59px; left: 11px; gap: 4px; }
+  .item-tool { width: 43px; height: 42px; }
+  .tool-name, .item-tool kbd { display: none; }
+  .tool-glyph { font-size: 16px; }
   .quest-note p { font-size: 10px; }
   .note-seal { flex: 0 0 24px; }
   .controls { height: 165px; }

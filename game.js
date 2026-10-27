@@ -13,6 +13,7 @@ const shopItems = document.querySelector('#shopItems');
 const roomLabel = document.querySelector('#roomLabel');
 const joystick = document.querySelector('#joystick');
 const joystickKnob = document.querySelector('#joystickKnob');
+const itemBar = document.querySelector('#itemBar');
 const echoPads = document.querySelector('#echoPads');
 const echoSequence = document.querySelector('#echoSequence');
 const echoStatus = document.querySelector('#echoStatus');
@@ -59,6 +60,12 @@ const directions = [
   { id: 'down', icon: '↓', name: '下', frequency: 330 },
   { id: 'left', icon: '←', name: '左', frequency: 440 },
 ];
+const itemTools = [
+  { id: 'shell', name: '寻潮螺', icon: '◉', description: '鸣响并标出最近的未发现遗物' },
+  { id: 'bell', name: '藤铃', icon: '♬', description: '提示本区回声的第一声方向' },
+  { id: 'feather', name: '云羽', icon: '⌁', description: '短时提高移动速度与跳跃高度' },
+  { id: 'lantern', name: '潮灯', icon: '✦', description: '短时显出本区全部遗物' },
+];
 const npcs = [
   { id: 'ayan', scene: 0, x: 260, name: '阿沅', role: '摆渡人', kind: 'human', skin: 'coral', lines: ['先别急着过河，听听芦苇怎么说。', '今天的雾很轻，船桨都记得回家的路。'], request: { coins: 2, reward: 5, text: '替我找回两枚落在岸边的潮光吧。' } },
   { id: 'hebo', scene: 0, x: 900, name: '鹤伯', role: '白鹭先生', kind: 'bird', skin: 'mist', lines: ['我在这儿站了很久，等一阵往南的风。', '渡口的倒影里，偶尔会多出一艘船。'] },
@@ -78,18 +85,18 @@ const npcs = [
   { id: 'shiyi', scene: 3, x: 2100, name: '拾一', role: '远行客', kind: 'human', skin: 'coral', lines: ['我从很远的地方来，也还没想好去哪儿。', '如果你要继续走，记得把今天也带上。'] },
 ];
 const discoveries = [
-  { id: 'reed-shell', scene: 0, x: 460, lane: -.4, glyph: '◈', name: '月形螺壳', lore: '壳里藏着一小段退潮声。你把它贴近耳边，听见远处有人哼歌。', reward: 2 },
-  { id: 'reed-letter', scene: 0, x: 1250, lane: .42, glyph: '笺', name: '芦苇信笺', lore: '一片叶子上写着：等雾散了，我们就去看海。', reward: 2 },
-  { id: 'reed-nail', scene: 0, x: 1780, lane: -.3, glyph: '✣', name: '旧船铜钉', lore: '铜钉背面刻着很小的名字：阿沅。', reward: 2 },
-  { id: 'vine-seed', scene: 1, x: 500, lane: .4, glyph: '✿', name: '石缝种子', lore: '一颗种子在没有泥土的石缝里，仍然攥着春天。', reward: 2 },
-  { id: 'vine-bell', scene: 1, x: 1110, lane: -.42, glyph: '铃', name: '藤铃', lore: '轻轻一碰，山谷深处传来另一声回应。', reward: 2 },
-  { id: 'vine-mark', scene: 1, x: 1840, lane: .32, glyph: '印', name: '旅人刻痕', lore: '石壁上有一行旧字：迷路时，记得看看身后。', reward: 2 },
-  { id: 'cloud-feather', scene: 2, x: 460, lane: -.4, glyph: '羽', name: '云上羽片', lore: '羽毛轻得没有影子，握住它时却闻到了雨的味道。', reward: 2 },
-  { id: 'cloud-fruit', scene: 2, x: 1310, lane: .42, glyph: '果', name: '无根树果', lore: '果子里没有种子，只有一小片会发光的天空。', reward: 2 },
-  { id: 'cloud-stone', scene: 2, x: 1840, lane: -.38, glyph: '星', name: '星纹石片', lore: '它映出的不是你的脸，而是还没走过的路。', reward: 2 },
-  { id: 'altar-wick', scene: 3, x: 500, lane: .42, glyph: '芯', name: '未燃灯芯', lore: '灯芯仍是暖的，像有人刚刚把愿望放在这里。', reward: 2 },
-  { id: 'altar-glass', scene: 3, x: 1130, lane: -.4, glyph: '镜', name: '潮镜碎片', lore: '镜中潮汐倒着流，照见了一个微笑的自己。', reward: 2 },
-  { id: 'altar-shell', scene: 3, x: 1900, lane: .42, glyph: '潮', name: '归潮石', lore: '石头记下了每一次离开，也记得每一次回来。', reward: 2 },
+  { id: 'reed-shell', scene: 0, x: 460, lane: -.4, glyph: '◈', name: '月形螺壳', item: 'shell', lore: '壳里藏着一小段退潮声。你把它贴近耳边，听见远处有人哼歌。', reward: 2 },
+  { id: 'reed-letter', scene: 0, x: 1250, lane: .42, glyph: '笺', name: '芦苇信笺', item: 'bell', lore: '一片叶子上写着：等雾散了，我们就去看海。', reward: 2 },
+  { id: 'reed-nail', scene: 0, x: 1780, lane: -.3, glyph: '✣', name: '旧船铜钉', item: 'lantern', lore: '铜钉背面刻着很小的名字：阿沅。', reward: 2 },
+  { id: 'vine-seed', scene: 1, x: 500, lane: .4, glyph: '✿', name: '石缝种子', item: 'feather', lore: '一颗种子在没有泥土的石缝里，仍然攥着春天。', reward: 2 },
+  { id: 'vine-bell', scene: 1, x: 1110, lane: -.42, glyph: '铃', name: '藤铃', item: 'bell', lore: '轻轻一碰，山谷深处传来另一声回应。', reward: 2 },
+  { id: 'vine-mark', scene: 1, x: 1840, lane: .32, glyph: '印', name: '旅人刻痕', item: 'shell', lore: '石壁上有一行旧字：迷路时，记得看看身后。', reward: 2 },
+  { id: 'cloud-feather', scene: 2, x: 460, lane: -.4, glyph: '羽', name: '云上羽片', item: 'feather', lore: '羽毛轻得没有影子，握住它时却闻到了雨的味道。', reward: 2 },
+  { id: 'cloud-fruit', scene: 2, x: 1310, lane: .42, glyph: '果', name: '无根树果', item: 'lantern', lore: '果子里没有种子，只有一小片会发光的天空。', reward: 2 },
+  { id: 'cloud-stone', scene: 2, x: 1840, lane: -.38, glyph: '星', name: '星纹石片', item: 'shell', lore: '它映出的不是你的脸，而是还没走过的路。', reward: 2 },
+  { id: 'altar-wick', scene: 3, x: 500, lane: .42, glyph: '芯', name: '未燃灯芯', item: 'lantern', lore: '灯芯仍是暖的，像有人刚刚把愿望放在这里。', reward: 2 },
+  { id: 'altar-glass', scene: 3, x: 1130, lane: -.4, glyph: '镜', name: '潮镜碎片', item: 'bell', lore: '镜中潮汐倒着流，照见了一个微笑的自己。', reward: 2 },
+  { id: 'altar-shell', scene: 3, x: 1900, lane: .42, glyph: '潮', name: '归潮石', item: 'feather', lore: '石头记下了每一次离开，也记得每一次回来。', reward: 2 },
 ];
 const keyState = new Set();
 const input = { x: 0, y: 0 };
@@ -102,6 +109,8 @@ const state = {
   npcQuests: [],
   npcAccepted: [],
   discoveries: [],
+  inventory: { shell: 0, bell: 0, feather: 0, lantern: 0 },
+  effects: { scanId: null, scanUntil: 0, revealUntil: 0, featherUntil: 0, echoHintScene: null },
   remotes: [],
   room: '',
   id: crypto.randomUUID(),
@@ -125,6 +134,7 @@ let previousFrame = performance.now();
 let networkTimer;
 let touchPointer = null;
 let hasChosenEntrySkin = false;
+let lastToolRefresh = 0;
 
 function readSave() {
   try {
@@ -136,6 +146,7 @@ function readSave() {
     state.npcQuests = Array.isArray(saved.npcQuests) ? saved.npcQuests : [];
     state.npcAccepted = Array.isArray(saved.npcAccepted) ? saved.npcAccepted : [];
     state.discoveries = Array.isArray(saved.discoveries) ? saved.discoveries : [];
+    state.inventory = Object.fromEntries(itemTools.map((item) => [item.id, Math.max(0, Math.floor(Number(saved.items?.[item.id]) || 0))]));
     player.skin = state.owned.includes(saved.skin) ? saved.skin : 'mist';
   } catch {
     state.owned = ['mist', 'coral', 'moss'];
@@ -144,12 +155,28 @@ function readSave() {
 }
 
 function saveGame() {
-  localStorage.setItem('mist-island-save', JSON.stringify({ coins: state.coins, owned: state.owned, collected: state.collected, solved: state.solved, npcQuests: state.npcQuests, npcAccepted: state.npcAccepted, discoveries: state.discoveries, skin: player.skin }));
+  localStorage.setItem('mist-island-save', JSON.stringify({ coins: state.coins, owned: state.owned, collected: state.collected, solved: state.solved, npcQuests: state.npcQuests, npcAccepted: state.npcAccepted, discoveries: state.discoveries, items: state.inventory, skin: player.skin }));
 }
 
 function updateCoinCount() {
   document.querySelector('#coinCount').textContent = state.coins;
   document.querySelector('#shopCoinCount').textContent = state.coins;
+}
+
+function renderItemBar() {
+  itemTools.forEach((item) => {
+    const button = itemBar.querySelector(`[data-item="${item.id}"]`);
+    const count = state.inventory[item.id] || 0;
+    const now = Date.now();
+    const active = item.id === 'shell' ? now < state.effects.scanUntil
+      : item.id === 'bell' ? state.effects.echoHintScene === scenes[player.scene].id
+        : item.id === 'feather' ? now < state.effects.featherUntil
+          : now < state.effects.revealUntil;
+    button.querySelector('b').textContent = count;
+    button.disabled = count === 0;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-label', `${item.name}，${count} 个，${item.description}，按 ${itemTools.indexOf(item) + 1} 使用`);
+  });
 }
 
 function renderSkinOptions() {
@@ -631,33 +658,42 @@ function getNearbyDiscovery() {
 
 function drawDiscoveries(time) {
   const floor = height * .77;
+  const now = Date.now();
+  const lanternActive = now < state.effects.revealUntil;
   discoveries.forEach((site) => {
     if (site.scene !== player.scene || state.discoveries.includes(site.id)) return;
     const distanceX = Math.abs(player.x - site.x);
     const distanceLane = Math.abs(player.lane - site.lane);
-    if (distanceX > 230 || distanceLane > .56) return;
-    const x = site.x - camera;
+    const tracked = site.id === state.effects.scanId && now < state.effects.scanUntil;
+    if (!tracked && !lanternActive && (distanceX > 230 || distanceLane > .56)) return;
+    const screenX = site.x - camera;
+    const offscreen = screenX < 24 || screenX > width - 24;
+    const x = (tracked || lanternActive) && offscreen ? Math.max(24, Math.min(width - 24, screenX)) : screenX;
     const y = floor + site.lane * Math.min(height * .12, 80);
     const isClose = distanceX < 110 && distanceLane < .32;
+    const isRevealed = tracked || lanternActive;
     const pulse = .38 + (Math.sin(time * .004 + site.x) + 1) * .18;
     ctx.save();
-    ctx.globalAlpha = isClose ? .88 : pulse;
-    ctx.strokeStyle = '#f1d28d';
-    ctx.fillStyle = isClose ? 'rgba(240,199,123,.2)' : 'rgba(240,199,123,.08)';
+    ctx.globalAlpha = isRevealed ? 1 : isClose ? .88 : pulse;
+    ctx.strokeStyle = isRevealed ? '#fff0bd' : '#f1d28d';
+    ctx.fillStyle = isRevealed ? 'rgba(240,199,123,.3)' : isClose ? 'rgba(240,199,123,.2)' : 'rgba(240,199,123,.08)';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.arc(x, y - 25, isClose ? 22 : 14, 0, Math.PI * 2);
+    ctx.arc(x, y - 25, isRevealed || isClose ? 22 : 14, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#f6dfaa';
-    ctx.font = isClose ? '17px serif' : '12px serif';
-    ctx.fillText(site.glyph, x, y - 25);
-    if (isClose) {
+    ctx.font = isRevealed || isClose ? '17px serif' : '12px serif';
+    ctx.fillText(offscreen ? (screenX < 0 ? '‹' : '›') : site.glyph, x, y - 25);
+    if (isClose || tracked) {
       ctx.font = '9px serif';
       ctx.fillStyle = 'rgba(248,241,218,.95)';
-      ctx.fillText(site.name, x, y - 51);
+      ctx.fillText(`${site.name}${tracked ? ` · ${Math.round(distanceX)}步` : ''}`, x, y - 51);
+    } else if (lanternActive && offscreen) {
+      ctx.font = '8px serif';
+      ctx.fillText(`${site.name} · ${Math.round(distanceX)}步`, x, y - 44);
     }
     ctx.restore();
   });
@@ -748,6 +784,47 @@ function showToast(message) {
   state.toastTimer = setTimeout(() => toast.classList.remove('visible'), 2400);
 }
 
+function useItem(itemId) {
+  if (!state.started) return;
+  const item = itemTools.find((tool) => tool.id === itemId);
+  if (!item || state.inventory[itemId] < 1) return;
+  if (state.challengeOpen && itemId !== 'bell') {
+    showToast('先完成回声，再使用这件遗物。');
+    return;
+  }
+
+  if (itemId === 'shell') {
+    const target = discoveries
+      .filter((site) => site.scene === player.scene && !state.discoveries.includes(site.id))
+      .sort((left, right) => Math.hypot(left.x - player.x, (left.lane - player.lane) * 520) - Math.hypot(right.x - player.x, (right.lane - player.lane) * 520))[0];
+    if (!target) return showToast('这片地方的遗物都已找齐，寻潮螺没有回应。');
+    state.effects.scanId = target.id;
+    state.effects.scanUntil = Date.now() + 12000;
+    showToast(`寻潮螺鸣向「${target.name}」，看屏幕边缘的指引。`);
+  } else if (itemId === 'bell') {
+    if (state.solved.includes(scenes[player.scene].id)) return showToast('此处回声已经归位，藤铃安静了下来。');
+    state.effects.echoHintScene = scenes[player.scene].id;
+    if (state.challengeOpen) {
+      renderEchoProgress();
+      echoStatus.textContent = '藤铃标出了第一声，跟着亮起的方向敲回去。';
+    }
+    showToast('藤铃标出本区回声的第一声。');
+  } else if (itemId === 'feather') {
+    if (Date.now() < state.effects.featherUntil) return showToast('云羽的风还在身边，等风息了再用。');
+    state.effects.featherUntil = Date.now() + 7000;
+    showToast('云羽借来一阵上升气流：跑得更快，也能跃得更高。');
+  } else if (itemId === 'lantern') {
+    const remaining = discoveries.some((site) => site.scene === player.scene && !state.discoveries.includes(site.id));
+    if (!remaining) return showToast('这片地方已没有遗物，潮灯不必点亮。');
+    state.effects.revealUntil = Date.now() + 10000;
+    showToast('潮灯照亮了附近的隐秘遗物，趁光还在去找找。');
+  }
+
+  state.inventory[itemId] -= 1;
+  saveGame();
+  renderItemBar();
+}
+
 function collectCoins() {
   coinPoints[player.scene].forEach((x, index) => {
     const key = `${scenes[player.scene].id}:${index}`;
@@ -771,10 +848,13 @@ function interact() {
   const nearbyDiscovery = getNearbyDiscovery();
   if (nearbyDiscovery) {
     state.discoveries.push(nearbyDiscovery.id);
+    state.inventory[nearbyDiscovery.item] += 1;
     state.coins += nearbyDiscovery.reward;
     saveGame();
     updateCoinCount();
-    showToast(`${nearbyDiscovery.name}：${nearbyDiscovery.lore}（✦ +${nearbyDiscovery.reward}）`);
+    renderItemBar();
+    const item = itemTools.find((tool) => tool.id === nearbyDiscovery.item);
+    showToast(`${nearbyDiscovery.name}：${nearbyDiscovery.lore} 获得${item.name} ×1（✦ +${nearbyDiscovery.reward}）`);
     return;
   }
   const story = stories[player.scene];
@@ -816,12 +896,12 @@ function interact() {
 }
 
 function jump() {
-  if (!state.challengeOpen && player.jump <= 0.1) player.jumpSpeed = 335;
+  if (!state.challengeOpen && player.jump <= 0.1) player.jumpSpeed = Date.now() < state.effects.featherUntil ? 470 : 335;
 }
 
 function update(delta) {
   if (!state.started || state.challengeOpen) return;
-  const speed = 230;
+  const speed = Date.now() < state.effects.featherUntil ? 345 : 230;
   const axisX = input.x + (keyState.has('KeyA') || keyState.has('ArrowLeft') ? -1 : 0) + (keyState.has('KeyD') || keyState.has('ArrowRight') ? 1 : 0);
   const axisY = input.y + (keyState.has('KeyW') || keyState.has('ArrowUp') ? -1 : 0) + (keyState.has('KeyS') || keyState.has('ArrowDown') ? 1 : 0);
   const moveX = Math.max(-1, Math.min(1, axisX));
@@ -842,6 +922,10 @@ function frame(time) {
   previousFrame = time;
   update(delta);
   draw(time);
+  if (time - lastToolRefresh > 300) {
+    renderItemBar();
+    lastToolRefresh = time;
+  }
   requestAnimationFrame(frame);
 }
 
@@ -873,9 +957,10 @@ function renderEchoProgress() {
   echoSequence.replaceChildren();
   echoes[player.scene].directions.forEach((direction, index) => {
     const note = directions.find((entry) => entry.id === direction);
+    const hinted = index === 0 && state.effects.echoHintScene === scenes[player.scene].id;
     const marker = document.createElement('span');
-    marker.className = `echo-step${index < state.challengeInput.length ? ' received' : ''}`;
-    marker.textContent = index < state.challengeInput.length ? note.icon : '·';
+    marker.className = `echo-step${index < state.challengeInput.length || hinted ? ' received' : ''}`;
+    marker.textContent = index < state.challengeInput.length || hinted ? note.icon : '·';
     echoSequence.append(marker);
   });
 }
@@ -946,6 +1031,7 @@ function finishEchoChallenge() {
   state.challengeOpen = false;
   state.challengePlaying = false;
   state.challengeToken += 1;
+  if (state.effects.echoHintScene === sceneId) state.effects.echoHintScene = null;
   echoStatus.textContent = perfect ? '一气呵成！回声把潮光留给了你。' : '回声归位，潮光已收下。';
   echoPads.querySelectorAll('button').forEach((button) => { button.disabled = true; });
   setTimeout(() => {
@@ -1043,6 +1129,7 @@ function setJoystick(event) {
 }
 
 readSave();
+renderItemBar();
 if (staticPages) {
   const roomCode = document.querySelector('#roomCode');
   roomCode.disabled = true;
@@ -1057,6 +1144,11 @@ requestAnimationFrame(frame);
 window.addEventListener('resize', resize);
 window.addEventListener('keydown', (event) => {
   if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.code)) event.preventDefault();
+  const itemIndex = Number(event.code.replace('Digit', '')) - 1;
+  if (!event.repeat && itemTools[itemIndex]) {
+    useItem(itemTools[itemIndex].id);
+    return;
+  }
   if (state.challengeOpen && !event.repeat) {
     const direction = { ArrowUp: 'up', KeyW: 'up', ArrowRight: 'right', KeyD: 'right', ArrowDown: 'down', KeyS: 'down', ArrowLeft: 'left', KeyA: 'left' }[event.code];
     if (direction) submitEcho(direction);
@@ -1091,6 +1183,10 @@ joystick.addEventListener('pointercancel', releaseJoystick);
 
 document.querySelector('#interactButton').addEventListener('click', interact);
 document.querySelector('#jumpButton').addEventListener('pointerdown', jump);
+itemBar.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-item]');
+  if (button) useItem(button.dataset.item);
+});
 document.querySelector('#replayEcho').addEventListener('click', replayEcho);
 document.querySelector('#startJourney').addEventListener('click', startJourney);
 document.querySelector('#openShop').addEventListener('click', () => { renderShop(); openModal('shopOverlay'); });
