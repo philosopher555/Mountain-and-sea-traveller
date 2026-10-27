@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#183b37" />
+    <title>雾岛来信 · 山海之外</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="game-shell">
+      <canvas id="world" aria-label="雾岛来信游戏画面"></canvas>
+      <div class="vignette" aria-hidden="true"></div>
+
+      <header class="topbar">
+        <div class="identity">
+          <div class="brand-mark" aria-hidden="true"><span></span><i></i></div>
+          <div>
+            <div class="brand-name">山海之外 <span>FIELD NOTES 01</span></div>
+            <div class="chapter-label">第一章 <b>·</b> 雾起渡口</div>
+          </div>
+        </div>
+        <div class="top-actions">
+          <div class="room-status"><i></i><span id="roomLabel">单人旅途</span></div>
+          <button class="coin-counter" id="openShop" aria-label="打开山货铺">
+            <span class="coin-glyph">✦</span><strong id="coinCount">0</strong><small>山海钱</small>
+          </button>
+          <button class="chapter-two" id="openUpdate"><span>第二章</span><b>→</b></button>
+        </div>
+      </header>
+
+      <div class="scene-caption" aria-live="polite">
+        <span class="caption-kicker">THE ISLAND REMEMBERS</span>
+        <strong id="sceneName">芦苇渡口</strong>
+        <span class="scene-index" id="sceneIndex">01 / 04</span>
+      </div>
+
+      <div class="quest-note" id="questNote">
+        <span class="note-seal">记</span>
+        <div><small>旅途札记</small><p>收集散落的潮光，去渡口尽头看看。</p></div>
+      </div>
+
+      <div class="nearby-prompt" id="nearbyPrompt" hidden><kbd>E</kbd><span>与雾门交谈</span></div>
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+      <div class="controls" aria-label="游戏操作">
+        <div class="joystick-wrap" id="joystick" aria-label="虚拟摇杆">
+          <div class="joystick-ring"><div class="joystick-knob" id="joystickKnob"></div></div>
+          <span>行走</span>
+        </div>
+        <div class="action-controls">
+          <button class="action-button interact-button" id="interactButton" aria-label="交谈或拾取">
+            <span class="action-icon">◎</span><span>交谈</span><kbd>E</kbd>
+          </button>
+          <button class="action-button jump-button" id="jumpButton" aria-label="跳跃">
+            <span class="action-icon">↑</span><span>跃起</span><kbd>Space</kbd>
+          </button>
+        </div>
+      </div>
+
+      <div class="keyboard-tip"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 行走 <span>·</span> <kbd>E</kbd> 交谈</div>
+
+      <section class="overlay entry-overlay" id="entryOverlay" aria-labelledby="entryTitle">
+        <div class="entry-panel">
+          <div class="panel-eyebrow"><span></span> MIST ISLAND · 01</div>
+          <h1 id="entryTitle">雾岛来信</h1>
+          <p class="entry-copy">潮声替你记得，山海之间的每一步。</p>
+          <div class="entry-rule"></div>
+          <div class="section-heading"><div><small>旅人档案</small><strong>选一身衣裳，再启程</strong></div><span>YOUR WAYFARER</span></div>
+          <div class="skin-options" id="entrySkins"></div>
+          <label class="field-label" for="playerName">旅人名字</label>
+          <input class="text-field" id="playerName" maxlength="14" value="拾雾的人" autocomplete="nickname" />
+          <label class="field-label" for="roomCode">同行暗号 <small>相同暗号的旅人会相遇</small></label>
+          <input class="text-field room-field" id="roomCode" maxlength="24" placeholder="留空即独自出发" autocomplete="off" />
+          <button class="primary-button" id="startJourney" disabled>披上衣裳，出发 <span>↗</span></button>
+          <p class="panel-footnote">此地的颜色、人物与故事皆为原创绘制</p>
+        </div>
+      </section>
+
+      <section class="overlay modal-overlay" id="shopOverlay" hidden aria-labelledby="shopTitle">
+        <div class="modal-panel shop-panel">
+          <button class="close-button" data-close="shopOverlay" aria-label="关闭商城">×</button>
+          <div class="panel-eyebrow"><span></span> THE TIDE MARKET</div>
+          <h2 id="shopTitle">潮汐山货铺</h2>
+          <p class="modal-copy">拿拾来的潮光，换一身新行头。</p>
+          <div class="shop-balance"><span>随身山海钱</span><strong>✦ <b id="shopCoinCount">0</b></strong></div>
+          <div class="shop-items" id="shopItems"></div>
+        </div>
+      </section>
+
+      <section class="overlay modal-overlay" id="updateOverlay" hidden aria-labelledby="updateTitle">
+        <div class="modal-panel update-panel">
+          <button class="close-button" data-close="updateOverlay" aria-label="关闭">×</button>
+          <div class="update-art" aria-hidden="true"><span class="update-moon"></span><span class="update-mountain mountain-a"></span><span class="update-mountain mountain-b"></span><span class="update-lantern">✦</span></div>
+          <div class="panel-eyebrow"><span></span> CHAPTER 02 · BEYOND THE FOG</div>
+          <h2 id="updateTitle">前路正在落笔</h2>
+          <p class="modal-copy">第二章还在潮声深处，等下一封来信。</p>
+          <div class="update-status"><span class="pulse-dot"></span> 更新中 <span class="status-dots">···</span></div>
+          <button class="secondary-button" data-close="updateOverlay">回到雾岛 <span>↗</span></button>
+        </div>
+      </section>
+
+      <div class="screen-grain" aria-hidden="true"></div>
+    </main>
+    <script type="module" src="./game.js"></script>
+  </body>
+</html>
