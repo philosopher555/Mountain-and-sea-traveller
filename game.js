@@ -11,6 +11,9 @@ const shopItems = document.querySelector('#shopItems');
 const roomLabel = document.querySelector('#roomLabel');
 const joystick = document.querySelector('#joystick');
 const joystickKnob = document.querySelector('#joystickKnob');
+const echoPads = document.querySelector('#echoPads');
+const echoSequence = document.querySelector('#echoSequence');
+const echoStatus = document.querySelector('#echoStatus');
 const staticPages = location.hostname.endsWith('.github.io');
 
 const WORLD_WIDTH = 2400;
@@ -25,9 +28,9 @@ const skins = [
   { id: 'mist', name: '雾青', subtitle: '渡口旧衣', coat: '#769d8c', trim: '#d8c795', face: '#e8c39c', hair: '#263a35', price: 0 },
   { id: 'coral', name: '晚霞', subtitle: '落日余温', coat: '#d17b64', trim: '#f0c77b', face: '#e7bd91', hair: '#533a34', price: 0 },
   { id: 'moss', name: '苔痕', subtitle: '山径拾来', coat: '#829052', trim: '#d9ca8d', face: '#e8c49b', hair: '#343b2b', price: 0 },
-  { id: 'ink', name: '墨潮', subtitle: '夜行斗篷', coat: '#536d82', trim: '#c4b8a2', face: '#eac5a0', hair: '#283343', price: 65 },
-  { id: 'sun', name: '金乌', subtitle: '向阳而行', coat: '#d6a64f', trim: '#f2d89e', face: '#e7bd91', hair: '#59402b', price: 90 },
-  { id: 'plum', name: '山茶', subtitle: '花影入袖', coat: '#a85d68', trim: '#e5b3a5', face: '#e8c39c', hair: '#49313a', price: 120 },
+  { id: 'ink', name: '墨潮', subtitle: '夜行斗篷', coat: '#536d82', trim: '#c4b8a2', face: '#eac5a0', hair: '#283343', price: 45 },
+  { id: 'sun', name: '金乌', subtitle: '向阳而行', coat: '#d6a64f', trim: '#f2d89e', face: '#e7bd91', hair: '#59402b', price: 75 },
+  { id: 'plum', name: '山茶', subtitle: '花影入袖', coat: '#a85d68', trim: '#e5b3a5', face: '#e8c39c', hair: '#49313a', price: 100 },
 ];
 
 const coinPoints = [
@@ -42,6 +45,18 @@ const stories = [
   { x: 1050, text: '树梢托住一小片天，风从云背后慢慢经过。' },
   { x: 1250, text: '石灯里还留着暖意，像是有人刚刚离开。' },
 ];
+const echoes = [
+  { title: '渡口的回声', directions: ['left', 'right', 'up'], clue: '芦苇向左，渡船向右，雾往天上去。' },
+  { title: '石壁的回声', directions: ['up', 'down', 'up', 'right'], clue: '藤蔓攀上石壁，又落回溪边。' },
+  { title: '云庭的回声', directions: ['right', 'up', 'left', 'down'], clue: '风绕过树梢，最后落在石阶上。' },
+  { title: '潮灯的回声', directions: ['down', 'left', 'up', 'right', 'down'], clue: '潮水退去又归来，灯火仍守在原地。' },
+];
+const directions = [
+  { id: 'up', icon: '↑', name: '上', frequency: 392 },
+  { id: 'right', icon: '→', name: '右', frequency: 523 },
+  { id: 'down', icon: '↓', name: '下', frequency: 330 },
+  { id: 'left', icon: '←', name: '左', frequency: 440 },
+];
 const keyState = new Set();
 const input = { x: 0, y: 0 };
 const player = { x: 110, lane: 0, jump: 0, jumpSpeed: 0, facing: 1, scene: 0, skin: 'mist', name: '拾雾的人' };
@@ -49,6 +64,7 @@ const state = {
   coins: 0,
   owned: ['mist', 'coral', 'moss'],
   collected: [],
+  solved: [],
   remotes: [],
   room: '',
   id: crypto.randomUUID(),
@@ -57,6 +73,11 @@ const state = {
   toastTimer: 0,
   storySeen: [],
   started: false,
+  challengeOpen: false,
+  challengePlaying: false,
+  challengeInput: [],
+  challengeMistakes: 0,
+  challengeToken: 0,
 };
 
 let width = innerWidth;
@@ -74,6 +95,7 @@ function readSave() {
     state.coins = Math.max(0, Number(saved.coins) || 0);
     state.owned = Array.isArray(saved.owned) ? [...new Set(['mist', 'coral', 'moss', ...saved.owned.filter((id) => skins.some((skin) => skin.id === id))])] : ['mist', 'coral', 'moss'];
     state.collected = Array.isArray(saved.collected) ? saved.collected : [];
+    state.solved = Array.isArray(saved.solved) ? saved.solved : [];
     player.skin = state.owned.includes(saved.skin) ? saved.skin : 'mist';
   } catch {
     state.owned = ['mist', 'coral', 'moss'];
@@ -82,7 +104,7 @@ function readSave() {
 }
 
 function saveGame() {
-  localStorage.setItem('mist-island-save', JSON.stringify({ coins: state.coins, owned: state.owned, collected: state.collected, skin: player.skin }));
+  localStorage.setItem('mist-island-save', JSON.stringify({ coins: state.coins, owned: state.owned, collected: state.collected, solved: state.solved, skin: player.skin }));
 }
 
 function updateCoinCount() {
@@ -343,12 +365,13 @@ function drawSceneFeatures(scene, time) {
 
 function drawGate(scene, floor) {
   const gateX = WORLD_WIDTH - 100;
+  const isOpen = state.solved.includes(scene.id);
   ctx.fillStyle = scene.id === 'altar' ? '#b77f63' : '#9c936d';
   ctx.fillRect(gateX - 25, floor - 87, 12, 91);
   ctx.fillRect(gateX + 17, floor - 87, 12, 91);
   ctx.fillRect(gateX - 33, floor - 93, 70, 11);
-  ctx.strokeStyle = scene.accent;
-  ctx.globalAlpha = .72;
+  ctx.strokeStyle = isOpen ? '#f0d291' : scene.accent;
+  ctx.globalAlpha = isOpen ? .95 : .4;
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.ellipse(gateX, floor - 54, 27, 38, 0, 0, Math.PI * 2);
@@ -356,7 +379,7 @@ function drawGate(scene, floor) {
   ctx.globalAlpha = 1;
   ctx.fillStyle = scene.accent;
   ctx.font = '10px serif';
-  ctx.fillText(scene.id === 'altar' ? '潮' : '雾', gateX - 5, floor - 48);
+  ctx.fillText(isOpen ? '开' : '锁', gateX - 5, floor - 48);
 }
 
 function drawCoin(x, y, time, index) {
@@ -452,14 +475,17 @@ function updateHud(scene) {
   sceneIndex.textContent = `${String(player.scene + 1).padStart(2, '0')} / 04`;
   const total = coinPoints.flat().length;
   const gathered = state.collected.length;
-  questNote.querySelector('p').textContent = gathered >= total ? '潮光都已收好，去渡口尽头看看。' : `收集散落的潮光（${gathered}/${total}），去渡口尽头看看。`;
+  const solved = state.solved.length;
+  questNote.querySelector('p').textContent = solved === scenes.length
+    ? `回声已解开；再找找潮光（${gathered}/${total}）。`
+    : `解开此地回声（${solved}/${scenes.length}），潮光 ${gathered}/${total}。`;
 
   const closeStory = Math.abs(player.x - stories[player.scene].x) < 70;
   const nearGate = player.x > WORLD_WIDTH - 180;
   const nearReturn = player.x < 70 && player.scene > 0;
   nearbyPrompt.hidden = !closeStory && !nearGate && !nearReturn;
   const promptText = nearbyPrompt.querySelector('span');
-  promptText.textContent = closeStory ? `聆听「${scene.landmark}」` : nearReturn ? '回到上一处风景' : player.scene === scenes.length - 1 ? '前路仍在更新' : '与雾门交谈';
+  promptText.textContent = closeStory ? (state.solved.includes(scene.id) ? `聆听「${scene.landmark}」` : '寻找此处的回声') : nearReturn ? '回到上一处风景' : player.scene === scenes.length - 1 ? '前路仍在更新' : '试着打开雾门';
   nearbyPrompt.querySelector('kbd').textContent = 'E';
 }
 
@@ -471,7 +497,6 @@ function showToast(message) {
 }
 
 function collectCoins() {
-  const floor = height * .77;
   coinPoints[player.scene].forEach((x, index) => {
     const key = `${scenes[player.scene].id}:${index}`;
     if (!state.collected.includes(key) && Math.abs(player.x - x) < 29) {
@@ -488,11 +513,18 @@ function interact() {
   if (!state.started) return;
   const story = stories[player.scene];
   if (Math.abs(player.x - story.x) < 100) {
-    state.storySeen.push(player.scene);
-    showToast(story.text);
+    if (state.solved.includes(scenes[player.scene].id)) {
+      showToast(story.text);
+    } else {
+      startEchoChallenge();
+    }
     return;
   }
   if (player.x > WORLD_WIDTH - 180 && player.scene < scenes.length - 1) {
+    if (!state.solved.includes(scenes[player.scene].id)) {
+      showToast('雾门没有回应。先去找回这片地方的回声。');
+      return;
+    }
     player.scene += 1;
     player.x = 100;
     player.lane = 0;
@@ -500,6 +532,10 @@ function interact() {
     return;
   }
   if (player.x > WORLD_WIDTH - 180 && player.scene === scenes.length - 1) {
+    if (!state.solved.includes(scenes[player.scene].id)) {
+      showToast('石灯仍未回应。去听听祭坛深处的潮声。');
+      return;
+    }
     openModal('updateOverlay');
     return;
   }
@@ -514,11 +550,11 @@ function interact() {
 }
 
 function jump() {
-  if (player.jump <= 0.1) player.jumpSpeed = 335;
+  if (!state.challengeOpen && player.jump <= 0.1) player.jumpSpeed = 335;
 }
 
 function update(delta) {
-  if (!state.started) return;
+  if (!state.started || state.challengeOpen) return;
   const speed = 230;
   const axisX = input.x + (keyState.has('KeyA') || keyState.has('ArrowLeft') ? -1 : 0) + (keyState.has('KeyD') || keyState.has('ArrowRight') ? 1 : 0);
   const axisY = input.y + (keyState.has('KeyW') || keyState.has('ArrowUp') ? -1 : 0) + (keyState.has('KeyS') || keyState.has('ArrowDown') ? 1 : 0);
@@ -567,6 +603,136 @@ async function syncPlayers() {
   }
 }
 
+function renderEchoProgress() {
+  echoSequence.replaceChildren();
+  echoes[player.scene].directions.forEach((direction, index) => {
+    const note = directions.find((entry) => entry.id === direction);
+    const marker = document.createElement('span');
+    marker.className = `echo-step${index < state.challengeInput.length ? ' received' : ''}`;
+    marker.textContent = index < state.challengeInput.length ? note.icon : '·';
+    echoSequence.append(marker);
+  });
+}
+
+function flashEchoPad(direction) {
+  const button = echoPads.querySelector(`[data-echo-direction="${direction}"]`);
+  if (!button) return;
+  button.classList.add('playing');
+  setTimeout(() => button.classList.remove('playing'), 220);
+}
+
+function playEchoTone(direction) {
+  const note = directions.find((entry) => entry.id === direction);
+  const AudioContext = window.AudioContext || window.webkitAudioContext;
+  if (!note || !AudioContext) return;
+  try {
+    const audio = new AudioContext();
+    const oscillator = audio.createOscillator();
+    const volume = audio.createGain();
+    oscillator.type = 'sine';
+    oscillator.frequency.value = note.frequency;
+    volume.gain.setValueAtTime(.0001, audio.currentTime);
+    volume.gain.exponentialRampToValueAtTime(.12, audio.currentTime + .025);
+    volume.gain.exponentialRampToValueAtTime(.0001, audio.currentTime + .22);
+    oscillator.connect(volume);
+    volume.connect(audio.destination);
+    oscillator.start();
+    oscillator.stop(audio.currentTime + .24);
+    oscillator.addEventListener('ended', () => audio.close(), { once: true });
+  } catch {
+    return;
+  }
+}
+
+function replayEcho() {
+  if (!state.challengeOpen) return;
+  const token = ++state.challengeToken;
+  const echo = echoes[player.scene];
+  state.challengePlaying = true;
+  state.challengeInput = [];
+  renderEchoProgress();
+  echoStatus.textContent = '听潮声……';
+  echoPads.querySelectorAll('button').forEach((button) => { button.disabled = true; });
+  echo.directions.forEach((direction, index) => {
+    setTimeout(() => {
+      if (!state.challengeOpen || token !== state.challengeToken) return;
+      flashEchoPad(direction);
+      playEchoTone(direction);
+    }, 420 + index * 570);
+  });
+  setTimeout(() => {
+    if (!state.challengeOpen || token !== state.challengeToken) return;
+    state.challengePlaying = false;
+    echoPads.querySelectorAll('button').forEach((button) => { button.disabled = false; });
+    echoStatus.textContent = echo.clue;
+  }, 420 + echo.directions.length * 570);
+}
+
+function finishEchoChallenge() {
+  const sceneId = scenes[player.scene].id;
+  const perfect = state.challengeMistakes === 0;
+  if (!state.solved.includes(sceneId)) {
+    state.solved.push(sceneId);
+    state.coins += perfect ? 12 : 8;
+    saveGame();
+    updateCoinCount();
+  }
+  state.challengeOpen = false;
+  state.challengePlaying = false;
+  state.challengeToken += 1;
+  echoStatus.textContent = perfect ? '一气呵成！回声把潮光留给了你。' : '回声归位，潮光已收下。';
+  echoPads.querySelectorAll('button').forEach((button) => { button.disabled = true; });
+  setTimeout(() => {
+    closeModal('resonanceOverlay');
+    showToast(perfect ? '完美共鸣！获得 12 枚潮光，雾门已开。' : '获得 8 枚潮光，雾门已开。');
+  }, 850);
+}
+
+function submitEcho(direction) {
+  if (!state.challengeOpen || state.challengePlaying) return;
+  const echo = echoes[player.scene];
+  flashEchoPad(direction);
+  playEchoTone(direction);
+  if (direction !== echo.directions[state.challengeInput.length]) {
+    state.challengeMistakes += 1;
+    state.challengeInput = [];
+    renderEchoProgress();
+    echoStatus.textContent = `潮声散开了。${echo.clue}`;
+    return;
+  }
+  state.challengeInput.push(direction);
+  renderEchoProgress();
+  if (state.challengeInput.length === echo.directions.length) {
+    finishEchoChallenge();
+  } else {
+    echoStatus.textContent = `回声应答 ${state.challengeInput.length} / ${echo.directions.length}`;
+  }
+}
+
+function startEchoChallenge() {
+  state.challengeOpen = true;
+  state.challengeMistakes = 0;
+  state.challengeInput = [];
+  const echo = echoes[player.scene];
+  document.querySelector('#resonanceTitle').textContent = echo.title;
+  document.querySelector('#resonanceChapter').textContent = String(player.scene + 1).padStart(2, '0');
+  document.querySelector('#resonanceCopy').textContent = `记住 ${echo.directions.length} 声潮音，按顺序敲回去。`;
+  echoPads.replaceChildren();
+  directions.forEach((direction) => {
+    const button = document.createElement('button');
+    button.className = 'echo-pad';
+    button.type = 'button';
+    button.dataset.echoDirection = direction.id;
+    button.setAttribute('aria-label', direction.name);
+    button.innerHTML = `<span>${direction.icon}</span><small>${direction.name}</small>`;
+    button.addEventListener('click', () => submitEcho(direction.id));
+    echoPads.append(button);
+  });
+  renderEchoProgress();
+  openModal('resonanceOverlay');
+  replayEcho();
+}
+
 function startJourney() {
   if (!hasChosenEntrySkin) return;
   player.name = document.querySelector('#playerName').value.trim().slice(0, 14) || '拾雾的人';
@@ -587,6 +753,11 @@ function openModal(id) {
 
 function closeModal(id) {
   document.querySelector(`#${id}`).hidden = true;
+  if (id === 'resonanceOverlay') {
+    state.challengeOpen = false;
+    state.challengePlaying = false;
+    state.challengeToken += 1;
+  }
 }
 
 function setJoystick(event) {
@@ -620,6 +791,12 @@ requestAnimationFrame(frame);
 window.addEventListener('resize', resize);
 window.addEventListener('keydown', (event) => {
   if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.code)) event.preventDefault();
+  if (state.challengeOpen && !event.repeat) {
+    const direction = { ArrowUp: 'up', KeyW: 'up', ArrowRight: 'right', KeyD: 'right', ArrowDown: 'down', KeyS: 'down', ArrowLeft: 'left', KeyA: 'left' }[event.code];
+    if (direction) submitEcho(direction);
+    if (event.code === 'Escape') closeModal('resonanceOverlay');
+    if (direction || event.code === 'Escape') return;
+  }
   keyState.add(event.code);
   if (event.code === 'KeyE' && !event.repeat) interact();
   if (event.code === 'Space' && !event.repeat) jump();
@@ -648,6 +825,7 @@ joystick.addEventListener('pointercancel', releaseJoystick);
 
 document.querySelector('#interactButton').addEventListener('click', interact);
 document.querySelector('#jumpButton').addEventListener('pointerdown', jump);
+document.querySelector('#replayEcho').addEventListener('click', replayEcho);
 document.querySelector('#startJourney').addEventListener('click', startJourney);
 document.querySelector('#openShop').addEventListener('click', () => { renderShop(); openModal('shopOverlay'); });
 document.querySelector('#openUpdate').addEventListener('click', () => openModal('updateOverlay'));

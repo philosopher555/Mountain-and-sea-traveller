@@ -88,6 +88,20 @@
         </div>
       </section>
 
+      <section class="overlay modal-overlay" id="resonanceOverlay" hidden aria-labelledby="resonanceTitle">
+        <div class="modal-panel resonance-panel">
+          <button class="close-button" data-close="resonanceOverlay" aria-label="暂时离开谜题">×</button>
+          <div class="panel-eyebrow"><span></span> ISLAND ECHO · <b id="resonanceChapter">01</b></div>
+          <h2 id="resonanceTitle">听潮回声</h2>
+          <p class="modal-copy" id="resonanceCopy">听完潮声，再按顺序敲响回声。</p>
+          <div class="echo-sequence" id="echoSequence" aria-label="回声输入进度"></div>
+          <div class="echo-status" id="echoStatus" aria-live="polite">仔细听，记住方向。</div>
+          <div class="echo-pads" id="echoPads" aria-label="回声方向键"></div>
+          <button class="replay-button" id="replayEcho"><span>↻</span> 再听一次</button>
+          <p class="echo-reward">解开回声，可得 <strong>✦ 8</strong>；一气呵成得 12 枚</p>
+        </div>
+      </section>
+
       <section class="overlay modal-overlay" id="updateOverlay" hidden aria-labelledby="updateTitle">
         <div class="modal-panel update-panel">
           <button class="close-button" data-close="updateOverlay" aria-label="关闭">×</button>
