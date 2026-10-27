@@ -5,6 +5,8 @@ const sceneIndex = document.querySelector('#sceneIndex');
 const questNote = document.querySelector('#questNote');
 const nearbyPrompt = document.querySelector('#nearbyPrompt');
 const toast = document.querySelector('#toast');
+const interactButton = document.querySelector('#interactButton');
+const interactLabel = interactButton.querySelector('span:nth-child(2)');
 const entryOverlay = document.querySelector('#entryOverlay');
 const entrySkins = document.querySelector('#entrySkins');
 const shopItems = document.querySelector('#shopItems');
@@ -75,6 +77,20 @@ const npcs = [
   { id: 'chaosheng', scene: 3, x: 1700, name: '潮生', role: '潮汐灵', kind: 'spirit', skin: 'ink', lines: ['退潮不是离开，是在远处换一口气。', '再往前走，雾后面还有很长很长的路。'], request: { coins: 3, reward: 8, text: '收集三枚潮光，帮我把它们送回海里。' } },
   { id: 'shiyi', scene: 3, x: 2100, name: '拾一', role: '远行客', kind: 'human', skin: 'coral', lines: ['我从很远的地方来，也还没想好去哪儿。', '如果你要继续走，记得把今天也带上。'] },
 ];
+const discoveries = [
+  { id: 'reed-shell', scene: 0, x: 460, lane: -.4, glyph: '◈', name: '月形螺壳', lore: '壳里藏着一小段退潮声。你把它贴近耳边，听见远处有人哼歌。', reward: 2 },
+  { id: 'reed-letter', scene: 0, x: 1250, lane: .42, glyph: '笺', name: '芦苇信笺', lore: '一片叶子上写着：等雾散了，我们就去看海。', reward: 2 },
+  { id: 'reed-nail', scene: 0, x: 1780, lane: -.3, glyph: '✣', name: '旧船铜钉', lore: '铜钉背面刻着很小的名字：阿沅。', reward: 2 },
+  { id: 'vine-seed', scene: 1, x: 500, lane: .4, glyph: '✿', name: '石缝种子', lore: '一颗种子在没有泥土的石缝里，仍然攥着春天。', reward: 2 },
+  { id: 'vine-bell', scene: 1, x: 1110, lane: -.42, glyph: '铃', name: '藤铃', lore: '轻轻一碰，山谷深处传来另一声回应。', reward: 2 },
+  { id: 'vine-mark', scene: 1, x: 1840, lane: .32, glyph: '印', name: '旅人刻痕', lore: '石壁上有一行旧字：迷路时，记得看看身后。', reward: 2 },
+  { id: 'cloud-feather', scene: 2, x: 460, lane: -.4, glyph: '羽', name: '云上羽片', lore: '羽毛轻得没有影子，握住它时却闻到了雨的味道。', reward: 2 },
+  { id: 'cloud-fruit', scene: 2, x: 1310, lane: .42, glyph: '果', name: '无根树果', lore: '果子里没有种子，只有一小片会发光的天空。', reward: 2 },
+  { id: 'cloud-stone', scene: 2, x: 1840, lane: -.38, glyph: '星', name: '星纹石片', lore: '它映出的不是你的脸，而是还没走过的路。', reward: 2 },
+  { id: 'altar-wick', scene: 3, x: 500, lane: .42, glyph: '芯', name: '未燃灯芯', lore: '灯芯仍是暖的，像有人刚刚把愿望放在这里。', reward: 2 },
+  { id: 'altar-glass', scene: 3, x: 1130, lane: -.4, glyph: '镜', name: '潮镜碎片', lore: '镜中潮汐倒着流，照见了一个微笑的自己。', reward: 2 },
+  { id: 'altar-shell', scene: 3, x: 1900, lane: .42, glyph: '潮', name: '归潮石', lore: '石头记下了每一次离开，也记得每一次回来。', reward: 2 },
+];
 const keyState = new Set();
 const input = { x: 0, y: 0 };
 const player = { x: 110, lane: 0, jump: 0, jumpSpeed: 0, facing: 1, scene: 0, skin: 'mist', name: '拾雾的人' };
@@ -85,6 +101,7 @@ const state = {
   solved: [],
   npcQuests: [],
   npcAccepted: [],
+  discoveries: [],
   remotes: [],
   room: '',
   id: crypto.randomUUID(),
@@ -118,6 +135,7 @@ function readSave() {
     state.solved = Array.isArray(saved.solved) ? saved.solved : [];
     state.npcQuests = Array.isArray(saved.npcQuests) ? saved.npcQuests : [];
     state.npcAccepted = Array.isArray(saved.npcAccepted) ? saved.npcAccepted : [];
+    state.discoveries = Array.isArray(saved.discoveries) ? saved.discoveries : [];
     player.skin = state.owned.includes(saved.skin) ? saved.skin : 'mist';
   } catch {
     state.owned = ['mist', 'coral', 'moss'];
@@ -126,7 +144,7 @@ function readSave() {
 }
 
 function saveGame() {
-  localStorage.setItem('mist-island-save', JSON.stringify({ coins: state.coins, owned: state.owned, collected: state.collected, solved: state.solved, npcQuests: state.npcQuests, npcAccepted: state.npcAccepted, skin: player.skin }));
+  localStorage.setItem('mist-island-save', JSON.stringify({ coins: state.coins, owned: state.owned, collected: state.collected, solved: state.solved, npcQuests: state.npcQuests, npcAccepted: state.npcAccepted, discoveries: state.discoveries, skin: player.skin }));
 }
 
 function updateCoinCount() {
@@ -431,7 +449,7 @@ function drawCoin(x, y, time, index) {
 function drawPlayer(x, lane, skin, name, facing, jump, time, isRemote = false) {
   const outfit = skins.find((entry) => entry.id === skin) || skins[0];
   const floor = height * .77;
-  const baseY = floor + lane * 30 - jump;
+  const baseY = floor + lane * Math.min(height * .12, 80) - jump;
   const step = Math.sin(time * .014 + x * .02) * 2;
   const px = x - camera;
   ctx.save();
@@ -605,6 +623,46 @@ function getNearbyNpc() {
     .sort((left, right) => Math.abs(player.x - left.x) - Math.abs(player.x - right.x))[0];
 }
 
+function getNearbyDiscovery() {
+  return discoveries
+    .filter((site) => site.scene === player.scene && !state.discoveries.includes(site.id) && Math.abs(player.x - site.x) < 64 && Math.abs(player.lane - site.lane) < .17)
+    .sort((left, right) => Math.abs(player.x - left.x) - Math.abs(player.x - right.x))[0];
+}
+
+function drawDiscoveries(time) {
+  const floor = height * .77;
+  discoveries.forEach((site) => {
+    if (site.scene !== player.scene || state.discoveries.includes(site.id)) return;
+    const distanceX = Math.abs(player.x - site.x);
+    const distanceLane = Math.abs(player.lane - site.lane);
+    if (distanceX > 230 || distanceLane > .56) return;
+    const x = site.x - camera;
+    const y = floor + site.lane * Math.min(height * .12, 80);
+    const isClose = distanceX < 110 && distanceLane < .32;
+    const pulse = .38 + (Math.sin(time * .004 + site.x) + 1) * .18;
+    ctx.save();
+    ctx.globalAlpha = isClose ? .88 : pulse;
+    ctx.strokeStyle = '#f1d28d';
+    ctx.fillStyle = isClose ? 'rgba(240,199,123,.2)' : 'rgba(240,199,123,.08)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(x, y - 25, isClose ? 22 : 14, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#f6dfaa';
+    ctx.font = isClose ? '17px serif' : '12px serif';
+    ctx.fillText(site.glyph, x, y - 25);
+    if (isClose) {
+      ctx.font = '9px serif';
+      ctx.fillStyle = 'rgba(248,241,218,.95)';
+      ctx.fillText(site.name, x, y - 51);
+    }
+    ctx.restore();
+  });
+}
+
 function talkToNpc(npc) {
   if (npc.request && !state.npcQuests.includes(npc.id)) {
     if (!state.npcAccepted.includes(npc.id)) {
@@ -639,6 +697,7 @@ function draw(time) {
     const key = `${scene.id}:${index}`;
     if (!state.collected.includes(key)) drawCoin(x, floor - 41 - (index % 2) * 12, time, index);
   });
+  drawDiscoveries(time);
   drawNpcs(time);
 
   for (const remote of state.remotes) {
@@ -655,11 +714,14 @@ function updateHud(scene) {
   const total = coinPoints.flat().length;
   const gathered = state.collected.length;
   const solved = state.solved.length;
+  const foundSites = state.discoveries.length;
   const activeRequest = npcs.find((npc) => npc.scene === player.scene && npc.request && state.npcAccepted.includes(npc.id) && !state.npcQuests.includes(npc.id));
   if (activeRequest) {
     const sceneId = scenes[player.scene].id;
     const localCoins = state.collected.filter((key) => key.startsWith(`${sceneId}:`)).length;
     questNote.querySelector('p').textContent = `支线：${activeRequest.name}的潮光（${localCoins}/${activeRequest.request.coins}），收好后还给 TA。`;
+  } else if (foundSites < discoveries.length) {
+    questNote.querySelector('p').textContent = `探索秘境遗物（${foundSites}/${discoveries.length}），找找忽明忽暗的微光；按 W/S 穿行不同层路。`;
   } else {
     questNote.querySelector('p').textContent = solved === scenes.length
       ? `回声已解开；再找找潮光（${gathered}/${total}）。`
@@ -667,12 +729,15 @@ function updateHud(scene) {
   }
 
   const nearbyNpc = getNearbyNpc();
+  const nearbyDiscovery = getNearbyDiscovery();
   const closeStory = Math.abs(player.x - stories[player.scene].x) < 70;
   const nearGate = player.x > WORLD_WIDTH - 180;
   const nearReturn = player.x < 70 && player.scene > 0;
-  nearbyPrompt.hidden = !nearbyNpc && !closeStory && !nearGate && !nearReturn;
+  nearbyPrompt.hidden = !nearbyNpc && !nearbyDiscovery && !closeStory && !nearGate && !nearReturn;
+  interactLabel.textContent = nearbyNpc ? '交谈' : nearbyDiscovery ? '调查' : '互动';
+  interactButton.setAttribute('aria-label', nearbyNpc ? `和${nearbyNpc.name}交谈` : nearbyDiscovery ? `调查${nearbyDiscovery.name}` : '互动');
   const promptText = nearbyPrompt.querySelector('span');
-  promptText.textContent = nearbyNpc ? `和 ${nearbyNpc.name} 聊聊` : closeStory ? (state.solved.includes(scene.id) ? `聆听「${scene.landmark}」` : '寻找此处的回声') : nearReturn ? '回到上一处风景' : player.scene === scenes.length - 1 ? '前路仍在更新' : '试着打开雾门';
+  promptText.textContent = nearbyNpc ? `和 ${nearbyNpc.name} 聊聊` : nearbyDiscovery ? `调查「${nearbyDiscovery.name}」` : closeStory ? (state.solved.includes(scene.id) ? `聆听「${scene.landmark}」` : '寻找此处的回声') : nearReturn ? '回到上一处风景' : player.scene === scenes.length - 1 ? '前路仍在更新' : '试着打开雾门';
   nearbyPrompt.querySelector('kbd').textContent = 'E';
 }
 
@@ -701,6 +766,15 @@ function interact() {
   const nearbyNpc = getNearbyNpc();
   if (nearbyNpc) {
     talkToNpc(nearbyNpc);
+    return;
+  }
+  const nearbyDiscovery = getNearbyDiscovery();
+  if (nearbyDiscovery) {
+    state.discoveries.push(nearbyDiscovery.id);
+    state.coins += nearbyDiscovery.reward;
+    saveGame();
+    updateCoinCount();
+    showToast(`${nearbyDiscovery.name}：${nearbyDiscovery.lore}（✦ +${nearbyDiscovery.reward}）`);
     return;
   }
   const story = stories[player.scene];
